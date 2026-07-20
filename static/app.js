@@ -184,21 +184,11 @@ function renderSidebar() {
 
 async function loadRecentActivity() {
     try {
-        // Load history for all people (from leaderboard endpoint since it returns all)
-        const allHistory = [];
-        for (const p of people.slice(0, 10)) { // limit to first 10 people
-            const res = await fetch(`${API}/people/${p.id}/history`);
-            const hist = await res.json();
-            hist.forEach(h => {
-                h._personName = p.name;
-            });
-            allHistory.push(...hist);
-        }
-
-        allHistory.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        const res = await fetch(`${API}/rating-changes`);
+        const allHistory = await res.json();
         const recent = allHistory.slice(0, 5);
 
-        if (recent.length === 0) {
+        if (allHistory.length === 0) {
             dom.recentList.innerHTML = '<p class="text-muted">Нет изменений</p>';
             dom.changesToday.textContent = '0';
             return;

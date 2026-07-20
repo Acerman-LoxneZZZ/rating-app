@@ -225,6 +225,23 @@ def get_rating_history(person_id: int, db: Session = Depends(get_db)):
     return [c.to_dict() for c in changes]
 
 
+@app.get("/api/rating-changes")
+def get_global_rating_changes(db: Session = Depends(get_db)):
+    """Get the latest 50 rating changes across all people."""
+    changes = (
+        db.query(RatingChange)
+        .order_by(desc(RatingChange.created_at))
+        .limit(50)
+        .all()
+    )
+    res = []
+    for c in changes:
+        d = c.to_dict()
+        d["_personName"] = c.person.name if c.person else "Unknown"
+        res.append(d)
+    return res
+
+
 # ---------------------------------------------------------------------------
 # Leaderboard API
 # ---------------------------------------------------------------------------

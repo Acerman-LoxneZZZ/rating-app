@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env
+
+# Database
+rating.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Uploads
+uploads/*
+!uploads/.gitkeep
+
+# Local files & IDEs
+.idea/
+.vscode/
+*.log
+.gemini/

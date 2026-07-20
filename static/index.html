@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="People Rating — современная система рейтинга людей">
+    <title>Рейтинг Помойки</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#8c3df5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css?v=1.0.4">
+</head>
+<body>
+    <!-- ============================================= -->
+    <!-- HEADER                                        -->
+    <!-- ============================================= -->
+    <header class="header" id="header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-text">Рейтинг Помойки</span>
+            </div>
+            <nav class="nav" id="main-nav">
+                <button class="nav-btn active" data-view="dashboard" id="nav-dashboard">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5"/><rect x="1" y="9" width="6" height="6" rx="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5"/></svg>
+                    Dashboard
+                </button>
+                <button class="nav-btn" data-view="leaderboard" id="nav-leaderboard">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l2 4 4.5.7-3.2 3.1.8 4.5L8 11.3 3.9 13.3l.8-4.5L1.5 5.7 6 5z"/></svg>
+                    Лидерборд
+                </button>
+                <button class="nav-btn" data-view="penalties" id="nav-penalties">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><line x1="5" y1="6" x2="11" y2="6" stroke="currentColor" stroke-width="2"/><line x1="5" y1="10" x2="11" y2="10" stroke="currentColor" stroke-width="2"/></svg>
+                    Шаблоны
+                </button>
+            </nav>
+            <div class="header-actions">
+                <button class="btn btn-outline" id="btn-add-person">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="3" x2="8" y2="13"/><line x1="3" y1="8" x2="13" y2="8"/></svg>
+                    Добавить
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ============================================= -->
+    <!-- DASHBOARD LAYOUT                              -->
+    <!-- ============================================= -->
+    <main class="dashboard" id="main-content">
+
+        <!-- === VIEW: Dashboard === -->
+        <div class="view active" id="view-dashboard">
+            <!-- Left Sidebar -->
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-section">
+                    <h2 class="sidebar-title">Summary</h2>
+
+                    <!-- Ring Chart -->
+                    <div class="ring-chart-wrap">
+                        <svg class="ring-chart" viewBox="0 0 120 120">
+                            <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10"/>
+                            <circle id="ring-avg" class="ring-progress" cx="60" cy="60" r="52" fill="none" stroke-width="10" stroke-linecap="round"
+                                    stroke-dasharray="0 327" transform="rotate(-90 60 60)"/>
+                        </svg>
+                        <div class="ring-label">
+                            <span class="ring-value" id="ring-value">0</span>
+                            <span class="ring-sub">Average Rating</span>
+                        </div>
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="stat-list">
+                        <div class="stat-row">
+                            <span class="stat-dot dot-high"></span>
+                            <span class="stat-name">Высокий (61–100)</span>
+                            <span class="stat-val" id="stat-high">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-dot dot-mid"></span>
+                            <span class="stat-name">Средний (31–60)</span>
+                            <span class="stat-val" id="stat-mid">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-dot dot-low"></span>
+                            <span class="stat-name">Низкий (1–30)</span>
+                            <span class="stat-val" id="stat-low">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top 3 Quick -->
+                <div class="sidebar-section">
+                    <h3 class="sidebar-subtitle">Топ-3</h3>
+                    <div class="top3-list" id="top3-list">
+                        <p class="text-muted">Нет данных</p>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="sidebar-section">
+                    <h3 class="sidebar-subtitle">Последние изменения</h3>
+                    <div class="recent-list" id="recent-list">
+                        <p class="text-muted">Нет изменений</p>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content Area -->
+            <div class="content-area">
+                <!-- Stats Bar -->
+                <div class="stats-cards" id="stats-cards">
+                    <div class="stat-card">
+                        <span class="stat-card-label">Всего людей</span>
+                        <span class="stat-card-value" id="total-people">0</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-card-label">Лучший рейтинг</span>
+                        <span class="stat-card-value color-high" id="best-rating">—</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-card-label">Худший рейтинг</span>
+                        <span class="stat-card-value color-low" id="worst-rating">—</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-card-label">Изменений сегодня</span>
+                        <span class="stat-card-value" id="changes-today">0</span>
+                    </div>
+                </div>
+
+                <!-- People Section -->
+                <div class="content-section">
+                    <div class="content-section-header">
+                        <h2>Люди</h2>
+                        <span class="counter-badge" id="people-count">0</span>
+                    </div>
+                    <div class="people-grid" id="people-grid"></div>
+                    <div class="empty-state" id="empty-state" style="display:none;">
+                        <h3>Пока никого нет</h3>
+                        <p>Добавьте первого человека в рейтинг</p>
+                        <button class="btn btn-primary" id="btn-add-empty">Добавить человека</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- === VIEW: Leaderboard === -->
+        <div class="view" id="view-leaderboard">
+            <div class="leaderboard-page">
+                <div class="content-section-header">
+                    <h2>Лидерборд</h2>
+                </div>
+                <div class="podium" id="podium"></div>
+                <div class="leaderboard-list" id="leaderboard-list"></div>
+            </div>
+        </div>
+
+        <!-- === VIEW: Penalty Templates === -->
+        <div class="view" id="view-penalties">
+            <div class="templates-page-layout">
+                
+                <!-- Page Header -->
+                <div class="templates-header">
+                    <div>
+                        <h2>Шаблоны оценок</h2>
+                        <p class="text-muted">Настройка быстрых действий для выставления баллов</p>
+                    </div>
+                </div>
+
+                <div class="templates-grid">
+                    <!-- Column 1: Penalties -->
+                    <div class="templates-column penalty-col">
+                        <div class="premium-card penalty-card">
+                            <div class="card-header">
+                                <span class="header-icon">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                                </span>
+                                <h3>Штрафы</h3>
+                            </div>
+                            
+                            <!-- Add Form (inline/compact) -->
+                            <form id="form-add-penalty" class="compact-template-form">
+                                <div class="form-row">
+                                    <div class="form-group flex-2">
+                                        <input type="text" id="penalty-name" placeholder="Название штрафа..." required>
+                                    </div>
+                                    <div class="form-group flex-1">
+                                        <input type="number" id="penalty-val" value="25" min="1" max="100" placeholder="Очки" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-add-icon" title="Создать шаблон штрафа">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                    </button>
+                                </div>
+                            </form>
+                            
+                            <div class="templates-divider"></div>
+                            
+                            <div class="templates-list-wrapper" id="penalty-templates-list">
+                                <!-- JS renders penalties list here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column 2: Rewards -->
+                    <div class="templates-column reward-col">
+                        <div class="premium-card reward-card">
+                            <div class="card-header">
+                                <span class="header-icon">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                </span>
+                                <h3>Поощрения</h3>
+                            </div>
+
+                            <!-- Add Form (inline/compact) -->
+                            <form id="form-add-reward" class="compact-template-form">
+                                <div class="form-row">
+                                    <div class="form-group flex-2">
+                                        <input type="text" id="reward-name" placeholder="Название поощрения..." required>
+                                    </div>
+                                    <div class="form-group flex-1">
+                                        <input type="number" id="reward-val" value="25" min="1" max="100" placeholder="Очки" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-add-icon" title="Создать шаблон поощрения">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                    </button>
+                                </div>
+                            </form>
+
+                            <div class="templates-divider"></div>
+
+                            <div class="templates-list-wrapper" id="reward-templates-list">
+                                <!-- JS renders rewards list here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ============================================= -->
+    <!-- MODAL: Add / Edit Person                      -->
+    <!-- ============================================= -->
+    <div class="modal-overlay" id="modal-person">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modal-person-title">Добавить человека</h2>
+                <button class="modal-close" id="modal-person-close">✕</button>
+            </div>
+            <form id="form-person" class="modal-body">
+                <input type="hidden" id="person-id" value="">
+
+                <div class="form-group">
+                    <label for="person-name">Имя</label>
+                    <input type="text" id="person-name" placeholder="Введите имя" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="person-description">Описание</label>
+                    <textarea id="person-description" placeholder="Характеристика, заметки..." rows="3"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="person-rating">Начальный рейтинг: <span id="rating-value-label">50</span></label>
+                    <input type="range" id="person-rating" min="1" max="100" value="50" class="rating-slider">
+                    <div class="rating-range-labels">
+                        <span>1</span><span>50</span><span>100</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="person-photo">Фото</label>
+                    <div class="photo-upload" id="photo-upload-area">
+                        <input type="file" id="person-photo" accept="image/*" hidden>
+                        <div class="photo-preview" id="photo-preview">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="photo-placeholder-icon" style="margin-bottom: 6px; opacity: 0.7;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                            <p>Нажмите для загрузки</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-ghost" id="btn-cancel-person">Отмена</button>
+                    <button type="submit" class="btn btn-primary" id="btn-save-person">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- MODAL: Person Profile                         -->
+    <!-- ============================================= -->
+    <div class="modal-overlay" id="modal-profile">
+        <div class="modal modal-large">
+            <div class="modal-header">
+                <h2 id="profile-name">Профиль</h2>
+                <div class="modal-header-actions">
+                    <button class="btn-icon" id="btn-edit-person" title="Редактировать">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button class="btn-icon btn-icon-danger" id="btn-delete-person" title="Удалить">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                    <button class="modal-close" id="modal-profile-close">✕</button>
+                </div>
+            </div>
+            <div class="modal-body profile-modal-layout" id="profile-body">
+                <!-- Left Column: Info, Manual Form, History -->
+                <div class="profile-modal-left">
+                    <div class="profile-top">
+                        <div class="profile-photo-wrap">
+                            <img id="profile-photo" src="" alt="">
+                            <div class="profile-no-photo" id="profile-no-photo">No Photo</div>
+                        </div>
+                        <div class="profile-info">
+                            <p class="profile-desc" id="profile-description"></p>
+                            <div class="profile-rating-block">
+                                <div class="profile-rating-number" id="profile-rating">50</div>
+                                <div class="profile-rating-bar-wrap">
+                                    <div class="profile-rating-bar" id="profile-rating-bar" style="width:50%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rating-change-section">
+                        <h3>Изменить рейтинг</h3>
+                        <form id="form-rating" class="rating-change-form">
+                            <input type="hidden" id="rating-person-id" value="">
+                            <div class="rating-change-row">
+                                <div class="form-group compact">
+                                    <label for="new-rating">Новый рейтинг: <span id="new-rating-label">50</span></label>
+                                    <input type="range" id="new-rating" min="1" max="100" value="50" class="rating-slider">
+                                </div>
+                                <div class="form-group compact">
+                                    <label for="rating-comment">Причина</label>
+                                    <input type="text" id="rating-comment" placeholder="Почему изменился рейтинг?">
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-sm">Применить</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="history-section">
+                        <h3>История изменений</h3>
+                        <div class="timeline" id="timeline">
+                            <p class="timeline-empty">Пока нет изменений</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Quick Templates -->
+                <div class="profile-modal-right">
+                    <div class="quick-actions-section">
+                        <h3>Быстрый выбор</h3>
+                        <div class="quick-actions-group">
+                            <span class="quick-actions-label">Штрафы</span>
+                            <div class="quick-penalties" id="quick-penalties"></div>
+                        </div>
+                        <div class="quick-actions-group" style="margin-top: 15px;">
+                            <span class="quick-actions-label">Поощрения</span>
+                            <div class="quick-rewards" id="quick-rewards"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js?v=1.0.4"></script>
+</body>
+</html>

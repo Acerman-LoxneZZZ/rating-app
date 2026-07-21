@@ -1169,18 +1169,3 @@ function renderGlobalAvgChart(allHistory) {
         }
     });
 }
-
-// Unregister Service Worker to prevent caching issues
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(registrations => {
-        for (let registration of registrations) {
-            registration.unregister().then(ok => {
-                if (ok) {
-                    console.log('ServiceWorker unregistered successfully');
-                    // Reload to apply changes immediately
-                    window.location.reload();
-                }
-            });
-        }
-    });
-}

@@ -189,7 +189,7 @@ async function loadRecentActivity() {
             const errText = await res.text();
             console.error('API /rating-changes returned error:', res.status, errText);
             dom.recentList.innerHTML = `<p class="text-danger" style="font-size:12px; color:var(--color-low);">Ошибка загрузки истории (${res.status}): ${esc(errText.substring(0, 100))}</p>`;
-            dom.changesToday.textContent = '0';
+            if (dom.changesToday) dom.changesToday.textContent = '0';
             return;
         }
         const allHistory = await res.json();
@@ -197,7 +197,7 @@ async function loadRecentActivity() {
         if (!Array.isArray(allHistory)) {
             console.error('API /rating-changes returned non-array payload:', allHistory);
             dom.recentList.innerHTML = `<p class="text-danger" style="font-size:12px; color:var(--color-low);">Неверный формат данных истории</p>`;
-            dom.changesToday.textContent = '0';
+            if (dom.changesToday) dom.changesToday.textContent = '0';
             return;
         }
 
@@ -205,7 +205,7 @@ async function loadRecentActivity() {
 
         if (allHistory.length === 0) {
             dom.recentList.innerHTML = '<p class="text-muted">Нет изменений</p>';
-            dom.changesToday.textContent = '0';
+            if (dom.changesToday) dom.changesToday.textContent = '0';
             return;
         }
 
@@ -215,7 +215,7 @@ async function loadRecentActivity() {
             if (!h.created_at) return false;
             return new Date(h.created_at).toDateString() === today;
         }).length;
-        dom.changesToday.textContent = todayCount;
+        if (dom.changesToday) dom.changesToday.textContent = todayCount;
 
         dom.recentList.innerHTML = recent.map(h => {
             const diff = h.new_rating - h.old_rating;

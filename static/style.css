@@ -1650,3 +1650,104 @@ body {
     .rating-change-row { flex-direction: column; }
     .lb-bar-wrap { display: none; }
 }
+
+/* =====================================================
+   PROFILE NAVIGATOR
+   ===================================================== */
+.profile-nav-section {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+}
+
+.profile-nav-section h3 {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+.profile-nav-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.profile-nav-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.profile-nav-card:hover:not(.nav-card-disabled) {
+    border-color: var(--border-hover);
+    background: var(--bg-card-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.profile-nav-card.nav-card-disabled {
+    cursor: default;
+    opacity: 0.4;
+    border-color: transparent;
+    background: rgba(255, 255, 255, 0.01);
+}
+
+.nav-card-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+.nav-card-body {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1.5px solid var(--border-hover);
+}
+
+.nav-avatar-placeholder {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent-light);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.nav-card-info {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-card-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.nav-card-rating {
+    font-size: 12px;
+    font-weight: 800;
+}

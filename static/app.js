@@ -60,6 +60,8 @@ const dom = {
     profileDescription: $('#profile-description'),
     profileRating: $('#profile-rating'),
     profileRatingBar: $('#profile-rating-bar'),
+    profileNavPrev: $('#profile-nav-prev'),
+    profileNavNext: $('#profile-nav-next'),
 
     // Rating change
     formRating: $('#form-rating'),
@@ -474,8 +476,62 @@ async function openProfile(id) {
         });
     }
 
+    renderProfileNav(person);
+
     await loadHistory(id);
     openModal(dom.modalProfile);
+}
+
+function renderProfileNav(person) {
+    if (!people || people.length === 0) return;
+
+    const sorted = [...people].sort((a, b) => {
+        if (b.rating !== a.rating) return b.rating - a.rating;
+        return a.name.localeCompare(b.name);
+    });
+
+    const idx = sorted.findIndex(p => p.id === person.id);
+    if (idx === -1) return;
+
+    const prevPerson = idx > 0 ? sorted[idx - 1] : person;
+    const nextPerson = idx < sorted.length - 1 ? sorted[idx + 1] : person;
+
+    const renderNavCardContent = (p, label, isSelf) => {
+        const photoHtml = p.photo_url 
+            ? `<img class="nav-avatar" src="${p.photo_url}" alt="">` 
+            : `<div class="nav-avatar-placeholder">${getInitial(p.name)}</div>`;
+        
+        return `
+            <div class="nav-card-label">${label}</div>
+            <div class="nav-card-body ${isSelf ? 'is-self' : ''}">
+                ${photoHtml}
+                <div class="nav-card-info">
+                    <span class="nav-card-name">${esc(p.name)}</span>
+                    <span class="nav-card-rating ${ratingColorClass(p.rating)}">${p.rating}</span>
+                </div>
+            </div>
+        `;
+    };
+
+    dom.profileNavPrev.innerHTML = renderNavCardContent(prevPerson, '← Выше в рейтинге', prevPerson.id === person.id);
+    dom.profileNavNext.innerHTML = renderNavCardContent(nextPerson, 'Ниже в рейтинге →', nextPerson.id === person.id);
+
+    // Setup active states & actions
+    if (prevPerson.id === person.id) {
+        dom.profileNavPrev.classList.add('nav-card-disabled');
+        dom.profileNavPrev.onclick = null;
+    } else {
+        dom.profileNavPrev.classList.remove('nav-card-disabled');
+        dom.profileNavPrev.onclick = () => openProfile(prevPerson.id);
+    }
+
+    if (nextPerson.id === person.id) {
+        dom.profileNavNext.classList.add('nav-card-disabled');
+        dom.profileNavNext.onclick = null;
+    } else {
+        dom.profileNavNext.classList.remove('nav-card-disabled');
+        dom.profileNavNext.onclick = () => openProfile(nextPerson.id);
+    }
 }
 
 function updateProfileRating(rating) {

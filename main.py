@@ -117,6 +117,17 @@ async def create_person(
     db.add(person)
     db.commit()
     db.refresh(person)
+
+    # Log initial rating creation
+    change = RatingChange(
+        person_id=person.id,
+        old_rating=0,
+        new_rating=rating,
+        comment="Создание профиля",
+    )
+    db.add(change)
+    db.commit()
+
     return person.to_dict()
 
 
@@ -239,18 +250,24 @@ def get_rating_history(person_id: int, db: Session = Depends(get_db)):
 @app.get("/api/rating-changes")
 def get_global_rating_changes(db: Session = Depends(get_db)):
     """Get the latest 50 rating changes across all people."""
-    changes = (
-        db.query(RatingChange)
-        .order_by(desc(RatingChange.created_at))
-        .limit(50)
-        .all()
-    )
-    res = []
-    for c in changes:
-        d = c.to_dict()
-        d["_personName"] = c.person.name if c.person else "Unknown"
-        res.append(d)
-    return res
+    try:
+        changes = (
+            db.query(RatingChange)
+            .order_by(desc(RatingChange.created_at))
+            .limit(50)
+            .all()
+        )
+        res = []
+        for c in changes:
+            d = c.to_dict()
+            d["_personName"] = c.person.name if c.person else "Unknown"
+            res.append(d)
+        return res
+    except Exception as e:
+        import traceback
+        print("ERROR IN GET /api/rating-changes:")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ---------------------------------------------------------------------------

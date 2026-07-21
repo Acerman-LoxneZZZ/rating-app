@@ -25,9 +25,11 @@ class Person(Base):
         created_at_str = None
         if self.created_at:
             if isinstance(self.created_at, str):
-                created_at_str = self.created_at
+                created_at_str = self.created_at.replace(" ", "T")
             else:
                 created_at_str = self.created_at.isoformat()
+            if created_at_str and not created_at_str.endswith('Z') and '+' not in created_at_str:
+                created_at_str += 'Z'
         return {
             "id": self.id,
             "name": self.name,
@@ -55,9 +57,11 @@ class RatingChange(Base):
         created_at_str = None
         if self.created_at:
             if isinstance(self.created_at, str):
-                created_at_str = self.created_at
+                created_at_str = self.created_at.replace(" ", "T")
             else:
                 created_at_str = self.created_at.isoformat()
+            if created_at_str and not created_at_str.endswith('Z') and '+' not in created_at_str:
+                created_at_str += 'Z'
         return {
             "id": self.id,
             "person_id": self.person_id,

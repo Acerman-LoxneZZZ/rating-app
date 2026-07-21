@@ -1008,6 +1008,11 @@ function renderPersonChart(history) {
 
     const accentColor = getComputedStyle(document.body).getPropertyValue('--accent').trim() || '#FFD700';
 
+    const canvasCtx = ctx.getContext('2d');
+    const gradient = canvasCtx.createLinearGradient(0, 0, 0, 200);
+    gradient.addColorStop(0, 'rgba(255, 215, 0, 0.25)');
+    gradient.addColorStop(1, 'rgba(255, 215, 0, 0.0)');
+
     personChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
@@ -1016,29 +1021,34 @@ function renderPersonChart(history) {
                 label: 'Рейтинг',
                 data: data,
                 borderColor: accentColor,
-                backgroundColor: 'rgba(255, 215, 0, 0.03)',
-                borderWidth: 2.5,
-                tension: 0.2,
+                backgroundColor: gradient,
+                borderWidth: 3,
+                tension: 0.4,
                 pointBackgroundColor: accentColor,
                 pointBorderColor: '#121212',
-                pointBorderWidth: 1.5,
+                pointBorderWidth: 2,
                 pointRadius: 4,
-                pointHoverRadius: 6,
+                pointHoverRadius: 7,
                 fill: true
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
             plugins: {
                 legend: { display: false },
                 tooltip: {
-                    backgroundColor: '#1a1a1a',
+                    backgroundColor: 'rgba(18, 18, 18, 0.95)',
                     titleColor: '#fff',
-                    bodyColor: '#aaa',
-                    borderColor: 'rgba(255,255,255,0.08)',
+                    bodyColor: '#ddd',
+                    borderColor: 'rgba(255,255,255,0.1)',
                     borderWidth: 1,
-                    padding: 8,
+                    padding: 10,
+                    cornerRadius: 8,
                     callbacks: {
                         label: function(context) {
                             const changeItem = sortedHistory[context.dataIndex];
@@ -1053,14 +1063,15 @@ function renderPersonChart(history) {
             },
             scales: {
                 x: {
-                    grid: { color: 'rgba(255,255,255,0.03)' },
-                    ticks: { color: '#888', font: { size: 9 } }
+                    grid: { color: 'rgba(255,255,255,0.04)' },
+                    ticks: { color: '#888', font: { size: 10 } }
                 },
                 y: {
-                    min: 1,
+                    min: 0,
                     max: 100,
-                    grid: { color: 'rgba(255,255,255,0.03)' },
-                    ticks: { color: '#888', font: { size: 9 }, stepSize: 20 }
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255,255,255,0.04)' },
+                    ticks: { color: '#888', font: { size: 10 }, stepSize: 25 }
                 }
             }
         }
@@ -1112,6 +1123,11 @@ function renderGlobalAvgChart(allHistory) {
 
     const avgColor = '#4dabf7';
 
+    const canvasCtx = ctx.getContext('2d');
+    const gradient = canvasCtx.createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, 'rgba(77, 171, 247, 0.3)');
+    gradient.addColorStop(1, 'rgba(77, 171, 247, 0.0)');
+
     avgChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
@@ -1120,29 +1136,34 @@ function renderGlobalAvgChart(allHistory) {
                 label: 'Средний рейтинг',
                 data: dataPoints,
                 borderColor: avgColor,
-                backgroundColor: 'rgba(77, 171, 247, 0.03)',
-                borderWidth: 2.5,
-                tension: 0.15,
+                backgroundColor: gradient,
+                borderWidth: 3,
+                tension: 0.4,
                 pointBackgroundColor: avgColor,
                 pointBorderColor: '#121212',
-                pointBorderWidth: 1.5,
-                pointRadius: 3,
-                pointHoverRadius: 5,
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 7,
                 fill: true
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
             plugins: {
                 legend: { display: false },
                 tooltip: {
-                    backgroundColor: '#1a1a1a',
+                    backgroundColor: 'rgba(18, 18, 18, 0.95)',
                     titleColor: '#fff',
-                    bodyColor: '#aaa',
-                    borderColor: 'rgba(255,255,255,0.08)',
+                    bodyColor: '#ddd',
+                    borderColor: 'rgba(255,255,255,0.1)',
                     borderWidth: 1,
-                    padding: 8,
+                    padding: 10,
+                    cornerRadius: 8,
                     callbacks: {
                         label: function(context) {
                             const changeItem = sorted[context.dataIndex];
@@ -1153,14 +1174,15 @@ function renderGlobalAvgChart(allHistory) {
             },
             scales: {
                 x: {
-                    grid: { color: 'rgba(255,255,255,0.03)' },
-                    ticks: { color: '#888', font: { size: 9 } }
+                    grid: { color: 'rgba(255,255,255,0.04)' },
+                    ticks: { color: '#888', font: { size: 10 } }
                 },
                 y: {
-                    min: 1,
+                    min: 0,
                     max: 100,
-                    grid: { color: 'rgba(255,255,255,0.03)' },
-                    ticks: { color: '#888', font: { size: 9 }, stepSize: 20 }
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255,255,255,0.04)' },
+                    ticks: { color: '#888', font: { size: 10 }, stepSize: 25 }
                 }
             }
         }

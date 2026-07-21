@@ -1104,20 +1104,30 @@ function renderGlobalAvgChart(allHistory) {
 
     const sorted = [...allHistory].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
-    let sumRatings = 0;
-    let countPeople = 0;
     const dataPoints = [];
     const labels = [];
 
-    sorted.forEach(h => {
-        if (h.old_rating === 0) {
-            countPeople += 1;
-            sumRatings += h.new_rating;
+    // Calculate true arithmetic mean of active ratings at each timestamp
+    sorted.forEach((h, index) => {
+        const historyUpToT = sorted.slice(0, index + 1);
+        const personRatings = {};
+
+        historyUpToT.forEach(entry => {
+            if (entry.person_id) {
+                personRatings[entry.person_id] = entry.new_rating;
+            }
+        });
+
+        const ratingValues = Object.values(personRatings);
+        if (ratingValues.length > 0) {
+            const sum = ratingValues.reduce((acc, val) => acc + val, 0);
+            let avg = Math.round(sum / ratingValues.length);
+            avg = Math.max(1, Math.min(100, avg));
+            dataPoints.push(avg);
         } else {
-            sumRatings += (h.new_rating - h.old_rating);
+            dataPoints.push(50);
         }
-        const avg = countPeople > 0 ? Math.round(sumRatings / countPeople) : 0;
-        dataPoints.push(avg);
+
         labels.push(formatShortDate(h.created_at));
     });
 

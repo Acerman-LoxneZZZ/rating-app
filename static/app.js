@@ -7,6 +7,9 @@ let people = [];
 let penalties = [];
 let rewards = [];
 let currentPersonId = null;
+let currentHistoryData = [];
+let personChartInstance = null;
+let avgChartInstance = null;
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
@@ -70,8 +73,13 @@ const dom = {
     newRatingLabel: $('#new-rating-label'),
     ratingComment: $('#rating-comment'),
 
-    // Timeline
+    // Timeline & Chart toggles
     timeline: $('#timeline'),
+    btnToggleTimeline: $('#btn-toggle-timeline'),
+    btnToggleChart: $('#btn-toggle-chart'),
+    profileChartContainer: $('#profile-chart-container'),
+    modalAvgChart: $('#modal-avg-chart'),
+    modalAvgChartClose: $('#modal-avg-chart-close'),
 
     // Templates view
     penaltyTemplatesList: $('#penalty-templates-list'),
@@ -353,11 +361,42 @@ function setupModals() {
         }
     });
 
-    [dom.modalPerson, dom.modalProfile].forEach(modal => {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) closeModal(modal);
-        });
+    [dom.modalPerson, dom.modalProfile, dom.modalAvgChart].forEach(modal => {
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal(modal);
+            });
+        }
     });
+
+    if (dom.modalAvgChartClose) {
+        dom.modalAvgChartClose.addEventListener('click', () => closeModal(dom.modalAvgChart));
+    }
+
+    const ringChart = $('.ring-chart-wrap');
+    if (ringChart) {
+        ringChart.addEventListener('click', () => {
+            openGlobalAvgChartModal();
+        });
+    }
+
+    if (dom.btnToggleTimeline) {
+        dom.btnToggleTimeline.addEventListener('click', () => {
+            dom.btnToggleTimeline.classList.add('active');
+            dom.btnToggleChart.classList.remove('active');
+            dom.timeline.style.display = 'block';
+            dom.profileChartContainer.style.display = 'none';
+        });
+        dom.btnToggleChart.addEventListener('click', () => {
+            dom.btnToggleTimeline.classList.remove('active');
+            dom.btnToggleChart.classList.add('active');
+            dom.timeline.style.display = 'none';
+            dom.profileChartContainer.style.display = 'block';
+            if (currentHistoryData) {
+                renderPersonChart(currentHistoryData);
+            }
+        });
+    }
 
     dom.photoUploadArea.addEventListener('click', () => dom.personPhoto.click());
     dom.personPhoto.addEventListener('change', handlePhotoSelect);
@@ -478,6 +517,14 @@ async function openProfile(id) {
 
     renderProfileNav(person);
 
+    // Reset history toggle to List by default
+    if (dom.btnToggleTimeline) {
+        dom.btnToggleTimeline.classList.add('active');
+        dom.btnToggleChart.classList.remove('active');
+        dom.timeline.style.display = 'block';
+        dom.profileChartContainer.style.display = 'none';
+    }
+
     await loadHistory(id);
     openModal(dom.modalProfile);
 }
@@ -545,7 +592,11 @@ async function loadHistory(personId) {
     try {
         const res = await fetch(`${API}/people/${personId}/history`);
         const history = await res.json();
+        currentHistoryData = history; // Save for charting
         renderTimeline(history);
+        if (dom.btnToggleChart && dom.btnToggleChart.classList.contains('active')) {
+            renderPersonChart(history);
+        }
     } catch (e) {
         console.error('Failed to load history:', e);
     }
@@ -938,6 +989,185 @@ function formatShortDate(iso) {
         return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
     }
     return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+}
+
+}
+
+// ─── Charts ──────────────────────────────────────────
+function renderPersonChart(history) {
+    const ctx = document.getElementById('person-chart');
+    if (!ctx) return;
+
+    if (personChartInstance) {
+        personChartInstance.destroy();
+    }
+
+    if (!history || history.length === 0) return;
+
+    const sortedHistory = [...history].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+    const labels = sortedHistory.map(h => formatShortDate(h.created_at));
+    const data = sortedHistory.map(h => h.new_rating);
+
+    const accentColor = getComputedStyle(document.body).getPropertyValue('--accent').trim() || '#FFD700';
+
+    personChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Рейтинг',
+                data: data,
+                borderColor: accentColor,
+                backgroundColor: 'rgba(255, 215, 0, 0.03)',
+                borderWidth: 2.5,
+                tension: 0.2,
+                pointBackgroundColor: accentColor,
+                pointBorderColor: '#121212',
+                pointBorderWidth: 1.5,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1a1a1a',
+                    titleColor: '#fff',
+                    bodyColor: '#aaa',
+                    borderColor: 'rgba(255,255,255,0.08)',
+                    borderWidth: 1,
+                    padding: 8,
+                    callbacks: {
+                        label: function(context) {
+                            const changeItem = sortedHistory[context.dataIndex];
+                            let label = ` Рейтинг: ${context.parsed.y}`;
+                            if (changeItem.comment) {
+                                label += ` (${changeItem.comment})`;
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255,255,255,0.03)' },
+                    ticks: { color: '#888', font: { size: 9 } }
+                },
+                y: {
+                    min: 1,
+                    max: 100,
+                    grid: { color: 'rgba(255,255,255,0.03)' },
+                    ticks: { color: '#888', font: { size: 9 }, stepSize: 20 }
+                }
+            }
+        }
+    });
+}
+
+async function openGlobalAvgChartModal() {
+    openModal(dom.modalAvgChart);
+    try {
+        const res = await fetch(`${API}/rating-changes`);
+        if (!res.ok) return;
+        const allHistory = await res.json();
+        if (Array.isArray(allHistory)) {
+            renderGlobalAvgChart(allHistory);
+        }
+    } catch (e) {
+        console.error('Failed to load global changes for chart:', e);
+    }
+}
+
+function renderGlobalAvgChart(allHistory) {
+    const ctx = document.getElementById('avg-rating-chart');
+    if (!ctx) return;
+
+    if (avgChartInstance) {
+        avgChartInstance.destroy();
+    }
+
+    if (!allHistory || allHistory.length === 0) return;
+
+    const sorted = [...allHistory].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+    let sumRatings = 0;
+    let countPeople = 0;
+    const dataPoints = [];
+    const labels = [];
+
+    sorted.forEach(h => {
+        if (h.old_rating === 0) {
+            countPeople += 1;
+            sumRatings += h.new_rating;
+        } else {
+            sumRatings += (h.new_rating - h.old_rating);
+        }
+        const avg = countPeople > 0 ? Math.round(sumRatings / countPeople) : 0;
+        dataPoints.push(avg);
+        labels.push(formatShortDate(h.created_at));
+    });
+
+    const avgColor = '#4dabf7';
+
+    avgChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Средний рейтинг',
+                data: dataPoints,
+                borderColor: avgColor,
+                backgroundColor: 'rgba(77, 171, 247, 0.03)',
+                borderWidth: 2.5,
+                tension: 0.15,
+                pointBackgroundColor: avgColor,
+                pointBorderColor: '#121212',
+                pointBorderWidth: 1.5,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1a1a1a',
+                    titleColor: '#fff',
+                    bodyColor: '#aaa',
+                    borderColor: 'rgba(255,255,255,0.08)',
+                    borderWidth: 1,
+                    padding: 8,
+                    callbacks: {
+                        label: function(context) {
+                            const changeItem = sorted[context.dataIndex];
+                            return ` Средний рейтинг: ${context.parsed.y} (${changeItem._personName || 'Челик'})`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255,255,255,0.03)' },
+                    ticks: { color: '#888', font: { size: 9 } }
+                },
+                y: {
+                    min: 1,
+                    max: 100,
+                    grid: { color: 'rgba(255,255,255,0.03)' },
+                    ticks: { color: '#888', font: { size: 9 }, stepSize: 20 }
+                }
+            }
+        }
+    });
 }
 
 // Unregister Service Worker to prevent caching issues

@@ -347,9 +347,20 @@
                     </div>
 
                     <div class="history-section">
-                        <h3>История изменений</h3>
-                        <div class="timeline" id="timeline">
-                            <p class="timeline-empty">Пока нет изменений</p>
+                        <div class="history-header">
+                            <h3>История изменений</h3>
+                            <div class="history-toggle-buttons">
+                                <button type="button" class="btn-toggle active" id="btn-toggle-timeline" title="Показать списком">Список</button>
+                                <button type="button" class="btn-toggle" id="btn-toggle-chart" title="Показать график">График</button>
+                            </div>
+                        </div>
+                        <div class="history-content-wrap">
+                            <div class="timeline" id="timeline">
+                                <p class="timeline-empty">Пока нет изменений</p>
+                            </div>
+                            <div class="chart-container-wrap" id="profile-chart-container" style="display: none;">
+                                <canvas id="person-chart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -380,6 +391,25 @@
         </div>
     </div>
 
+    <!-- ============================================= -->
+    <!-- MODAL: Global Average Rating Chart            -->
+    <!-- ============================================= -->
+    <div class="modal-overlay" id="modal-avg-chart">
+        <div class="modal modal-large">
+            <div class="modal-header">
+                <h2>История среднего рейтинга</h2>
+                <button class="modal-close" id="modal-avg-chart-close">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;">График показывает изменение среднего рейтинга всей системы во времени на основе всех записей изменений.</p>
+                <div class="global-chart-container" style="position: relative; height: 350px; width: 100%;">
+                    <canvas id="avg-rating-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="/static/app.js?v=1.0.6"></script>
 </body>
 </html>

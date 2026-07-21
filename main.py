@@ -2,7 +2,9 @@ import os
 import uuid
 import shutil
 import base64
+import io
 from datetime import datetime, timezone
+from PIL import Image
 
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form
 from fastapi.staticfiles import StaticFiles
@@ -12,6 +14,35 @@ from sqlalchemy import desc, text
 
 from database import engine, get_db, Base, SessionLocal
 from models import Person, RatingChange, PenaltyTemplate, RewardTemplate
+
+# ---------------------------------------------------------------------------
+# Image Compression Helper
+# ---------------------------------------------------------------------------
+def compress_image(contents: bytes, max_size=(300, 300), quality=75) -> str:
+    """Resize and compress an uploaded image to a small base64 JPEG data URL."""
+    try:
+        img = Image.open(io.BytesIO(contents))
+        
+        # Convert non-RGB (like PNG with transparency, or GIF) to RGB
+        if img.mode in ("RGBA", "P"):
+            background = Image.new("RGB", img.size, (255, 255, 255))
+            background.paste(img, mask=img.split()[3] if img.mode == "RGBA" else None)
+            img = background
+        elif img.mode != "RGB":
+            img = img.convert("RGB")
+            
+        # Resize maintaining aspect ratio
+        img.thumbnail(max_size, Image.Resampling.LANCZOS)
+        
+        # Save to bytes buffer as JPEG
+        buffer = io.BytesIO()
+        img.save(buffer, format="JPEG", quality=quality, optimize=True)
+        encoded = base64.b64encode(buffer.getvalue()).decode("utf-8")
+        return f"data:image/jpeg;base64,{encoded}"
+    except Exception as e:
+        print(f"Failed to compress image: {e}")
+        encoded_raw = base64.b64encode(contents).decode("utf-8")
+        return f"data:image/png;base64,{encoded_raw}"
 
 # ---------------------------------------------------------------------------
 # App setup
@@ -104,9 +135,7 @@ async def create_person(
     photo_url = ""
     if photo and photo.filename:
         contents = await photo.read()
-        encoded = base64.b64encode(contents).decode("utf-8")
-        mime_type = photo.content_type or "image/png"
-        photo_url = f"data:{mime_type};base64,{encoded}"
+        photo_url = compress_image(contents)
 
     person = Person(
         name=name,
@@ -167,9 +196,7 @@ async def update_person(
                 pass
 
         contents = await photo.read()
-        encoded = base64.b64encode(contents).decode("utf-8")
-        mime_type = photo.content_type or "image/png"
-        person.photo_url = f"data:{mime_type};base64,{encoded}"
+        person.photo_url = compress_image(contents)
 
     db.commit()
     db.refresh(person)

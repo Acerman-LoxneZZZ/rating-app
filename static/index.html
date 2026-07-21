@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css?v=1.0.5">
+    <link rel="stylesheet" href="/static/style.css?v=1.0.6">
 </head>
 <body>
     <!-- ============================================= -->
@@ -28,11 +28,11 @@
             <nav class="nav" id="main-nav">
                 <button class="nav-btn active" data-view="dashboard" id="nav-dashboard">
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5"/><rect x="1" y="9" width="6" height="6" rx="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5"/></svg>
-                    Dashboard
+                    Челы
                 </button>
                 <button class="nav-btn" data-view="leaderboard" id="nav-leaderboard">
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l2 4 4.5.7-3.2 3.1.8 4.5L8 11.3 3.9 13.3l.8-4.5L1.5 5.7 6 5z"/></svg>
-                    Лидерборд
+                    Кекс ребята
                 </button>
                 <button class="nav-btn" data-view="penalties" id="nav-penalties">
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><line x1="5" y1="6" x2="11" y2="6" stroke="currentColor" stroke-width="2"/><line x1="5" y1="10" x2="11" y2="10" stroke="currentColor" stroke-width="2"/></svg>
@@ -126,10 +126,7 @@
                         <span class="stat-card-label">Худший рейтинг</span>
                         <span class="stat-card-value color-low" id="worst-rating">—</span>
                     </div>
-                    <div class="stat-card">
-                        <span class="stat-card-label">Изменений сегодня</span>
-                        <span class="stat-card-value" id="changes-today">0</span>
-                    </div>
+
                 </div>
 
                 <!-- People Section -->
@@ -313,7 +310,7 @@
                 <div class="profile-modal-left">
                     <div class="profile-top">
                         <div class="profile-photo-wrap">
-                            <img id="profile-photo" src="" alt="">
+                            <img id="profile-photo" src="" alt="" onerror="this.style.display='none'; document.getElementById('profile-no-photo').style.display='flex';">
                             <div class="profile-no-photo" id="profile-no-photo">No Photo</div>
                         </div>
                         <div class="profile-info">
@@ -371,6 +368,6 @@
         </div>
     </div>
 
-    <script src="/static/app.js?v=1.0.5"></script>
+    <script src="/static/app.js?v=1.0.6"></script>
 </body>
 </html>

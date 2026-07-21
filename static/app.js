@@ -248,7 +248,7 @@ function renderPeopleGrid() {
     dom.grid.innerHTML = people.map(p => `
         <div class="person-card" onclick="openProfile(${p.id})">
             ${p.photo_url
-            ? `<img class="card-photo" src="${p.photo_url}" alt="${esc(p.name)}">`
+            ? `<img class="card-photo" src="${p.photo_url}" alt="${esc(p.name)}" onerror="this.onerror=null; this.outerHTML='<div class=&quot;card-no-photo&quot;>${getInitial(p.name)}</div>';">`
             : `<div class="card-no-photo">${getInitial(p.name)}</div>`
         }
             <div class="card-name">${esc(p.name)}</div>
@@ -282,7 +282,7 @@ function renderLeaderboard() {
         <div class="podium-card podium-${i + 1}" onclick="openProfile(${p.id})">
             <span class="podium-medal" style="font-size: 20px; font-weight: 800; opacity: 0.8; margin-bottom: 8px;">#${medals[i]}</span>
             ${p.photo_url
-            ? `<img class="podium-photo" src="${p.photo_url}" alt="${esc(p.name)}">`
+            ? `<img class="podium-photo" src="${p.photo_url}" alt="${esc(p.name)}" onerror="this.onerror=null; this.outerHTML='<div class=&quot;podium-no-photo&quot;>${getInitial(p.name)}</div>';">`
             : `<div class="podium-no-photo">${getInitial(p.name)}</div>`
         }
             <div class="podium-name">${esc(p.name)}</div>
@@ -295,7 +295,7 @@ function renderLeaderboard() {
         <div class="lb-row" onclick="openProfile(${p.id})">
             <span class="lb-rank">#${i + 4}</span>
             ${p.photo_url
-            ? `<img class="lb-photo" src="${p.photo_url}" alt="${esc(p.name)}">`
+            ? `<img class="lb-photo" src="${p.photo_url}" alt="${esc(p.name)}" onerror="this.onerror=null; this.outerHTML='<div class=&quot;lb-no-photo&quot;>${getInitial(p.name)}</div>';">`
             : `<div class="lb-no-photo">${getInitial(p.name)}</div>`
         }
             <span class="lb-name">${esc(p.name)}</span>
@@ -866,11 +866,17 @@ function formatShortDate(iso) {
     return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
 }
 
-// Register Service Worker for PWA
+// Unregister Service Worker to prevent caching issues
 if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js')
-            .then(reg => console.log('ServiceWorker registered:', reg.scope))
-            .catch(err => console.error('ServiceWorker registration failed:', err));
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+        for (let registration of registrations) {
+            registration.unregister().then(ok => {
+                if (ok) {
+                    console.log('ServiceWorker unregistered successfully');
+                    // Reload to apply changes immediately
+                    window.location.reload();
+                }
+            });
+        }
     });
 }

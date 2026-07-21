@@ -1,13 +1,14 @@
 import os
 import uuid
 import shutil
+import base64
 from datetime import datetime, timezone
 
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
-from sqlalchemy import desc
+from sqlalchemy import desc, text
 
 from database import engine, get_db, Base, SessionLocal
 from models import Person, RatingChange, PenaltyTemplate, RewardTemplate
@@ -24,6 +25,17 @@ os.makedirs("static", exist_ok=True)
 
 # Create tables
 Base.metadata.create_all(bind=engine)
+
+# Migrate database schema if using PostgreSQL
+db = SessionLocal()
+try:
+    if engine.url.drivername != "sqlite":
+        db.execute(text("ALTER TABLE people ALTER COLUMN photo_url TYPE TEXT;"))
+        db.commit()
+except Exception as e:
+    print(f"Database migration warning: {e}")
+finally:
+    db.close()
 
 # Initialize default templates if none exist
 db = SessionLocal()
@@ -91,12 +103,10 @@ async def create_person(
 
     photo_url = ""
     if photo and photo.filename:
-        ext = os.path.splitext(photo.filename)[1] or ".png"
-        filename = f"{uuid.uuid4().hex}{ext}"
-        filepath = os.path.join("uploads", filename)
-        with open(filepath, "wb") as f:
-            shutil.copyfileobj(photo.file, f)
-        photo_url = f"/uploads/{filename}"
+        contents = await photo.read()
+        encoded = base64.b64encode(contents).decode("utf-8")
+        mime_type = photo.content_type or "image/png"
+        photo_url = f"data:{mime_type};base64,{encoded}"
 
     person = Person(
         name=name,
@@ -136,18 +146,19 @@ async def update_person(
     person.description = description
 
     if photo and photo.filename:
-        # Remove old photo if exists
-        if person.photo_url:
-            old_path = person.photo_url.lstrip("/")
-            if os.path.exists(old_path):
-                os.remove(old_path)
+        # Remove old photo file if it was a local path
+        if person.photo_url and person.photo_url.startswith("/uploads/"):
+            try:
+                old_path = person.photo_url.lstrip("/")
+                if os.path.exists(old_path):
+                    os.remove(old_path)
+            except Exception:
+                pass
 
-        ext = os.path.splitext(photo.filename)[1] or ".png"
-        filename = f"{uuid.uuid4().hex}{ext}"
-        filepath = os.path.join("uploads", filename)
-        with open(filepath, "wb") as f:
-            shutil.copyfileobj(photo.file, f)
-        person.photo_url = f"/uploads/{filename}"
+        contents = await photo.read()
+        encoded = base64.b64encode(contents).decode("utf-8")
+        mime_type = photo.content_type or "image/png"
+        person.photo_url = f"data:{mime_type};base64,{encoded}"
 
     db.commit()
     db.refresh(person)

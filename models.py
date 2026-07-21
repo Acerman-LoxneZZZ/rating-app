@@ -12,7 +12,7 @@ class Person(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
     description = Column(Text, default="")
-    photo_url = Column(String(500), default="")
+    photo_url = Column(Text, default="")
     rating = Column(Integer, default=50)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 

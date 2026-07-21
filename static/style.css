@@ -1659,6 +1659,14 @@ body {
 }
 
 @media (max-width: 600px) {
+    body {
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+    .person-card, .podium-card, .sidebar-section {
+        transform: translateZ(0);
+        backface-visibility: hidden;
+    }
     .header-content { padding: 0 14px; gap: 12px; flex-wrap: wrap; height: auto; padding-top: 10px; padding-bottom: 10px; }
     .nav { order: 3; width: 100%; }
     .nav-btn { flex: 1; justify-content: center; font-size: 12px; }

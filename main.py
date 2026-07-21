@@ -23,6 +23,10 @@ def compress_image(contents: bytes, max_size=(300, 300), quality=75) -> str:
     try:
         img = Image.open(io.BytesIO(contents))
         
+        # Auto-rotate image according to EXIF orientation metadata (from phones)
+        from PIL import ImageOps
+        img = ImageOps.exif_transpose(img)
+        
         # Convert non-RGB (like PNG with transparency, or GIF) to RGB
         if img.mode in ("RGBA", "P"):
             background = Image.new("RGB", img.size, (255, 255, 255))

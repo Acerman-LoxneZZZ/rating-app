@@ -22,13 +22,19 @@ class Person(Base):
     )
 
     def to_dict(self):
+        created_at_str = None
+        if self.created_at:
+            if isinstance(self.created_at, str):
+                created_at_str = self.created_at
+            else:
+                created_at_str = self.created_at.isoformat()
         return {
             "id": self.id,
             "name": self.name,
             "description": self.description,
             "photo_url": self.photo_url,
             "rating": self.rating,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "created_at": created_at_str,
         }
 
 
@@ -46,13 +52,19 @@ class RatingChange(Base):
     person = relationship("Person", back_populates="rating_history")
 
     def to_dict(self):
+        created_at_str = None
+        if self.created_at:
+            if isinstance(self.created_at, str):
+                created_at_str = self.created_at
+            else:
+                created_at_str = self.created_at.isoformat()
         return {
             "id": self.id,
             "person_id": self.person_id,
             "old_rating": self.old_rating,
             "new_rating": self.new_rating,
             "comment": self.comment,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "created_at": created_at_str,
         }
 
 

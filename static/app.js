@@ -185,7 +185,17 @@ function renderSidebar() {
 async function loadRecentActivity() {
     try {
         const res = await fetch(`${API}/rating-changes`);
+        if (!res.ok) {
+            console.error('API /rating-changes returned error:', res.status, res.statusText);
+            return;
+        }
         const allHistory = await res.json();
+
+        if (!Array.isArray(allHistory)) {
+            console.error('API /rating-changes returned non-array payload:', allHistory);
+            return;
+        }
+
         const recent = allHistory.slice(0, 5);
 
         if (allHistory.length === 0) {
@@ -196,7 +206,10 @@ async function loadRecentActivity() {
 
         // Count today's changes
         const today = new Date().toDateString();
-        const todayCount = allHistory.filter(h => new Date(h.created_at).toDateString() === today).length;
+        const todayCount = allHistory.filter(h => {
+            if (!h.created_at) return false;
+            return new Date(h.created_at).toDateString() === today;
+        }).length;
         dom.changesToday.textContent = todayCount;
 
         dom.recentList.innerHTML = recent.map(h => {
@@ -207,7 +220,7 @@ async function loadRecentActivity() {
                 <div class="recent-item">
                     <span class="recent-arrow ${color}">${arrow}</span>
                     <div class="recent-text">
-                        <strong>${esc(h._personName)}</strong> ${h.old_rating} → ${h.new_rating}
+                        <strong>${esc(h._personName || 'Челик')}</strong> ${h.old_rating} → ${h.new_rating}
                         ${h.comment ? `<br>${esc(h.comment)}` : ''}
                     </div>
                     <span class="recent-date">${formatShortDate(h.created_at)}</span>

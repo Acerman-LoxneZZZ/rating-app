@@ -186,13 +186,18 @@ async function loadRecentActivity() {
     try {
         const res = await fetch(`${API}/rating-changes`);
         if (!res.ok) {
-            console.error('API /rating-changes returned error:', res.status, res.statusText);
+            const errText = await res.text();
+            console.error('API /rating-changes returned error:', res.status, errText);
+            dom.recentList.innerHTML = `<p class="text-danger" style="font-size:12px; color:var(--color-low);">Ошибка загрузки истории (${res.status}): ${esc(errText.substring(0, 100))}</p>`;
+            dom.changesToday.textContent = '0';
             return;
         }
         const allHistory = await res.json();
 
         if (!Array.isArray(allHistory)) {
             console.error('API /rating-changes returned non-array payload:', allHistory);
+            dom.recentList.innerHTML = `<p class="text-danger" style="font-size:12px; color:var(--color-low);">Неверный формат данных истории</p>`;
+            dom.changesToday.textContent = '0';
             return;
         }
 

@@ -990,9 +990,6 @@ function formatShortDate(iso) {
     }
     return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
 }
-
-}
-
 // ─── Charts ──────────────────────────────────────────
 function renderPersonChart(history) {
     const ctx = document.getElementById('person-chart');

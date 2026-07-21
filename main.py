@@ -78,6 +78,21 @@ async def serve_sw():
     return FileResponse("static/service-worker.js", media_type="application/javascript")
 
 
+@app.get("/api/debug-db")
+def debug_db():
+    from database import DATABASE_URL
+    safe_url = DATABASE_URL
+    if "@" in safe_url:
+        try:
+            parts = safe_url.split("@")
+            # postgresql://username:password@host/db
+            prefix = parts[0].split("://")[0]
+            safe_url = prefix + "://***:***@" + parts[1]
+        except Exception:
+            safe_url = "postgresql://***:***@hidden"
+    return {"database_url": safe_url}
+
+
 # ---------------------------------------------------------------------------
 # People API
 # ---------------------------------------------------------------------------

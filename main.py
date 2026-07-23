@@ -89,27 +89,35 @@ try:
     finally:
         db.close()
 
-    # Startup database image compression migration
+    # Startup database image compression migration (Memory Optimized)
     db = SessionLocal()
     try:
-        people = db.query(Person).all()
-        updated = False
-        for person in people:
-            if person.photo_url and person.photo_url.startswith("data:image"):
-                if len(person.photo_url) > 150000:
+        from sqlalchemy import func
+        # Query only the ID and size of the photo_url to prevent loading huge base64 strings into RAM
+        large_photos = (
+            db.query(Person.id, func.length(Person.photo_url))
+            .filter(Person.photo_url.like("data:image%"))
+            .all()
+        )
+        
+        for p_id, photo_len in large_photos:
+            if photo_len and photo_len > 150000:
+                # Retrieve one person at a time, process, commit, and immediately expunge to free memory
+                person = db.query(Person).filter(Person.id == p_id).first()
+                if person and person.photo_url:
                     try:
+                        print(f"Compressing legacy photo in DB for: {person.name} (length: {photo_len})")
                         header, encoded = person.photo_url.split(",", 1)
                         contents = base64.b64decode(encoded)
                         compressed_base64 = compress_image(contents)
                         if len(compressed_base64) < len(person.photo_url):
                             person.photo_url = compressed_base64
-                            updated = True
-                            print(f"Compressed legacy photo in DB for: {person.name}")
+                            db.commit()
+                            print(f"Successfully compressed and saved photo for {person.name}")
                     except Exception as e:
-                        print(f"Failed to compress legacy photo for {person.name} on startup: {e}")
-        if updated:
-            db.commit()
-            print("Database image compression migration complete.")
+                        print(f"Failed to compress legacy photo for person ID {p_id} on startup: {e}")
+                    finally:
+                        db.expunge(person)
     except Exception as e:
         print(f"Database image compression migration warning: {e}")
     finally:

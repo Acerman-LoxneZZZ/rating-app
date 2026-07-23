@@ -659,6 +659,46 @@ function renderTimeline(history) {
     }
 }
 
+// Helper to compress image on client-side before upload to prevent server OOM crashes
+function compressImageJS(file, maxWidth = 300, maxHeight = 300) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width = Math.round((width * maxHeight) / height);
+                        height = maxHeight;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    resolve(blob || file);
+                }, 'image/jpeg', 0.75);
+            };
+            img.onerror = () => resolve(file);
+            img.src = e.target.result;
+        };
+        reader.onerror = () => resolve(file);
+        reader.readAsDataURL(file);
+    });
+}
+
 // ─── Forms ───────────────────────────────────────────
 function setupForms() {
     dom.formPerson.addEventListener('submit', async (e) => {
@@ -668,8 +708,13 @@ function setupForms() {
         formData.append('name', dom.personName.value.trim());
         formData.append('description', dom.personDescription.value.trim());
         if (!id) formData.append('rating', dom.personRating.value);
-        const photoFile = dom.personPhoto.files[0];
-        if (photoFile) formData.append('photo', photoFile);
+        
+        let photoFile = dom.personPhoto.files[0];
+        if (photoFile) {
+            // Compress in browser to prevent server OOM on large uploads
+            photoFile = await compressImageJS(photoFile);
+            formData.append('photo', photoFile, 'photo.jpg');
+        }
 
         try {
             const url = id ? `${API}/people/${id}` : `${API}/people`;

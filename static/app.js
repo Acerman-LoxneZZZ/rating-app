@@ -7,6 +7,7 @@ let people = [];
 let penalties = [];
 let rewards = [];
 let currentPersonId = null;
+let currentCompressedPhotoBlob = null;
 let currentHistoryData = [];
 let personChartInstance = null;
 let avgChartInstance = null;
@@ -411,6 +412,7 @@ function setupModals() {
 
 function openPersonModal(person = null) {
     dom.formPerson.reset();
+    currentCompressedPhotoBlob = null;
     dom.photoPreview.innerHTML = '<span class="photo-placeholder">📷</span><p>Нажмите для загрузки</p>';
 
     if (person) {
@@ -451,14 +453,24 @@ function closeModal(modal) {
     document.body.style.overflow = '';
 }
 
-function handlePhotoSelect(e) {
+async function handlePhotoSelect(e) {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-        dom.photoPreview.innerHTML = `<img src="${ev.target.result}" alt="Preview"><p>Фото выбрано ✔</p>`;
-    };
-    reader.readAsDataURL(file);
+    
+    dom.photoPreview.innerHTML = '<span class="photo-placeholder">⏳</span><p>Сжатие картинки...</p>';
+    
+    try {
+        const compressedBlob = await compressImageJS(file);
+        currentCompressedPhotoBlob = compressedBlob;
+        
+        const previewUrl = URL.createObjectURL(compressedBlob);
+        dom.photoPreview.innerHTML = `<img src="${previewUrl}" alt="Preview"><p>Фото сжато и готово ✔</p>`;
+    } catch (err) {
+        console.error('Failed to compress and preview:', err);
+        currentCompressedPhotoBlob = file;
+        const previewUrl = URL.createObjectURL(file);
+        dom.photoPreview.innerHTML = `<img src="${previewUrl}" alt="Preview"><p>Выбрано без сжатия ⚠️</p>`;
+    }
 }
 
 // ─── Profile ─────────────────────────────────────────
@@ -709,11 +721,8 @@ function setupForms() {
         formData.append('description', dom.personDescription.value.trim());
         if (!id) formData.append('rating', dom.personRating.value);
         
-        let photoFile = dom.personPhoto.files[0];
-        if (photoFile) {
-            // Compress in browser to prevent server OOM on large uploads
-            photoFile = await compressImageJS(photoFile);
-            formData.append('photo', photoFile, 'photo.jpg');
+        if (currentCompressedPhotoBlob) {
+            formData.append('photo', currentCompressedPhotoBlob, 'photo.jpg');
         }
 
         try {

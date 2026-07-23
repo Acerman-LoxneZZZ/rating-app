@@ -20,6 +20,8 @@ from models import Person, RatingChange, PenaltyTemplate, RewardTemplate
 # ---------------------------------------------------------------------------
 def compress_image(contents: bytes, max_size=(300, 300), quality=75) -> str:
     """Resize and compress an uploaded image to a small base64 JPEG data URL."""
+    # Allow processing larger images if client-side compression is bypassed
+    Image.MAX_IMAGE_PIXELS = None
     try:
         img = Image.open(io.BytesIO(contents))
         
@@ -45,8 +47,7 @@ def compress_image(contents: bytes, max_size=(300, 300), quality=75) -> str:
         return f"data:image/jpeg;base64,{encoded}"
     except Exception as e:
         print(f"Failed to compress image: {e}")
-        encoded_raw = base64.b64encode(contents).decode("utf-8")
-        return f"data:image/png;base64,{encoded_raw}"
+        raise ValueError(f"Не удалось обработать изображение: {e}")
 
 # ---------------------------------------------------------------------------
 # App setup
@@ -179,8 +180,11 @@ async def create_person(
 
     photo_url = ""
     if photo and photo.filename:
-        contents = await photo.read()
-        photo_url = compress_image(contents)
+        try:
+            contents = await photo.read()
+            photo_url = compress_image(contents)
+        except Exception as e:
+            raise HTTPException(400, detail=str(e))
 
     person = Person(
         name=name,
@@ -240,8 +244,11 @@ async def update_person(
             except Exception:
                 pass
 
-        contents = await photo.read()
-        person.photo_url = compress_image(contents)
+        try:
+            contents = await photo.read()
+            person.photo_url = compress_image(contents)
+        except Exception as e:
+            raise HTTPException(400, detail=str(e))
 
     db.commit()
     db.refresh(person)

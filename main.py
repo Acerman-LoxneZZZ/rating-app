@@ -58,59 +58,66 @@ app = FastAPI(title="People Rating System")
 os.makedirs("uploads", exist_ok=True)
 os.makedirs("static", exist_ok=True)
 
-# Create tables
-Base.metadata.create_all(bind=engine)
-
-# Migrate database schema if using PostgreSQL
-db = SessionLocal()
+# Create tables and run startup migrations safely
 try:
-    if engine.url.drivername != "sqlite":
-        db.execute(text("ALTER TABLE people ALTER COLUMN photo_url TYPE TEXT;"))
-        db.commit()
+    Base.metadata.create_all(bind=engine)
+
+    # Migrate database schema if using PostgreSQL
+    db = SessionLocal()
+    try:
+        if engine.url.drivername != "sqlite":
+            db.execute(text("ALTER TABLE people ALTER COLUMN photo_url TYPE TEXT;"))
+            db.commit()
+    except Exception as e:
+        print(f"Database migration warning: {e}")
+    finally:
+        db.close()
+
+    # Initialize default templates if none exist
+    db = SessionLocal()
+    try:
+        if db.query(PenaltyTemplate).count() == 0:
+            db.add(PenaltyTemplate(name="Проход в обуви", penalty_value=25))
+            db.add(PenaltyTemplate(name="Не прибрано", penalty_value=25))
+            db.commit()
+        if db.query(RewardTemplate).count() == 0:
+            db.add(RewardTemplate(name="Помыл посуду", reward_value=15))
+            db.add(RewardTemplate(name="Сделал домашку", reward_value=20))
+            db.commit()
+    except Exception as e:
+        print(f"Template initialization warning: {e}")
+    finally:
+        db.close()
+
+    # Startup database image compression migration
+    db = SessionLocal()
+    try:
+        people = db.query(Person).all()
+        updated = False
+        for person in people:
+            if person.photo_url and person.photo_url.startswith("data:image"):
+                if len(person.photo_url) > 150000:
+                    try:
+                        header, encoded = person.photo_url.split(",", 1)
+                        contents = base64.b64decode(encoded)
+                        compressed_base64 = compress_image(contents)
+                        if len(compressed_base64) < len(person.photo_url):
+                            person.photo_url = compressed_base64
+                            updated = True
+                            print(f"Compressed legacy photo in DB for: {person.name}")
+                    except Exception as e:
+                        print(f"Failed to compress legacy photo for {person.name} on startup: {e}")
+        if updated:
+            db.commit()
+            print("Database image compression migration complete.")
+    except Exception as e:
+        print(f"Database image compression migration warning: {e}")
+    finally:
+        db.close()
+
 except Exception as e:
-    print(f"Database migration warning: {e}")
-finally:
-    db.close()
-
-# Initialize default templates if none exist
-db = SessionLocal()
-try:
-    if db.query(PenaltyTemplate).count() == 0:
-        db.add(PenaltyTemplate(name="Проход в обуви", penalty_value=25))
-        db.add(PenaltyTemplate(name="Не прибрано", penalty_value=25))
-        db.commit()
-    if db.query(RewardTemplate).count() == 0:
-        db.add(RewardTemplate(name="Помыл посуду", reward_value=15))
-        db.add(RewardTemplate(name="Сделал домашку", reward_value=20))
-        db.commit()
-finally:
-    db.close()
-
-# Startup database image compression migration
-db = SessionLocal()
-try:
-    people = db.query(Person).all()
-    updated = False
-    for person in people:
-        if person.photo_url and person.photo_url.startswith("data:image"):
-            if len(person.photo_url) > 150000:
-                try:
-                    header, encoded = person.photo_url.split(",", 1)
-                    contents = base64.b64decode(encoded)
-                    compressed_base64 = compress_image(contents)
-                    if len(compressed_base64) < len(person.photo_url):
-                        person.photo_url = compressed_base64
-                        updated = True
-                        print(f"Compressed legacy photo in DB for: {person.name}")
-                except Exception as e:
-                    print(f"Failed to compress legacy photo for {person.name} on startup: {e}")
-    if updated:
-        db.commit()
-        print("Database image compression migration complete.")
-except Exception as e:
-    print(f"Database image compression migration warning: {e}")
-finally:
-    db.close()
+    print(f"CRITICAL: Database startup initialization failed: {e}")
+    print("FastAPI will start, but database operations might fail until connection is restored.")
 
 # Mount static directories
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")

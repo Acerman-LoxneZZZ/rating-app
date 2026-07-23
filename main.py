@@ -86,6 +86,32 @@ try:
 finally:
     db.close()
 
+# Startup database image compression migration
+db = SessionLocal()
+try:
+    people = db.query(Person).all()
+    updated = False
+    for person in people:
+        if person.photo_url and person.photo_url.startswith("data:image"):
+            if len(person.photo_url) > 150000:
+                try:
+                    header, encoded = person.photo_url.split(",", 1)
+                    contents = base64.b64decode(encoded)
+                    compressed_base64 = compress_image(contents)
+                    if len(compressed_base64) < len(person.photo_url):
+                        person.photo_url = compressed_base64
+                        updated = True
+                        print(f"Compressed legacy photo in DB for: {person.name}")
+                except Exception as e:
+                    print(f"Failed to compress legacy photo for {person.name} on startup: {e}")
+    if updated:
+        db.commit()
+        print("Database image compression migration complete.")
+except Exception as e:
+    print(f"Database image compression migration warning: {e}")
+finally:
+    db.close()
+
 # Mount static directories
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 app.mount("/static", StaticFiles(directory="static"), name="static")
